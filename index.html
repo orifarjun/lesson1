@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    
+    <style>
+        body {
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            display: block;
+            width: 200px;
+            height: 50px;
+            margin: 10px auto;
+            font-size: 18px;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .option.correct,
+        .option:hover.correct {
+            background-color: #28a745;
+        }
+
+        .option.wrong,
+        .option:hover.wrong {
+            background-color: #dc3545;
+        }
+
+        .option.right-answer {
+            background-color: #28a745 !important;
+        }
+
+        .option:hover {
+            background-color: #0056b3;
+            cursor: pointer;
+        }
+
+        #result {
+            font-size: 24px;
+            margin-top: 30px;
+        }
+
+        #game-over {
+            font-size: 30px;
+            margin-top: 50px;
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="Hebrew">Title</h1>
+        
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <button class="option" id="option1"></button>
+                <button class="option" id="option2"></button>
+                <button class="option" id="option3"></button>
+                <button class="option" id="option4"></button>
+            </div>
+        </div>
+
+        <p id="result"></p>
+        <p id="game-over"></p>
+    </div>
+
+    <script>
+        let count = 0;
+        let correctCount = 0;
+        let lesson1 = [
+        {
+            heb: "אני",
+            eng: "I",
+        },
+        {
+            heb: "אתה, את, אתם, אתן",
+            eng: "you",
+        },
+        {
+            heb: "הוא",
+            eng: "he",
+        },
+        {
+            heb: "היא",
+            eng: "she",
+        },
+        {
+            heb: "אנחנו",
+            eng: "we",
+        },
+        {
+            heb: "הם, הן",
+            eng: "they",
+        },
+        ];
+
+        // function speak(text) {
+        //     const message = new SpeechSynthesisUtterance();
+        //     message.text = text;
+        //     message.lang = 'en-US';
+            
+        //     // Specify the pronunciation using SSML
+        //     if (text === 'they' || text === 'I') {
+        //         message.lang = 'en-GB';
+        //     }
+            
+        //     speechSynthesis.speak(message);
+        // }
+        
+        function speak(text) {
+            const message = new SpeechSynthesisUtterance();
+            message.text = text;
+            
+            // Retrieve the list of available voices
+            const voices = speechSynthesis.getVoices();
+            
+            // Find a voice with US English locale and the desired name
+            const voice = voices.find((v) => v.lang === 'en-US' && v.name === 'Google US English');
+            
+            if (voice) {
+                message.voice = voice;
+            }
+            
+            speechSynthesis.speak(message);
+        }
+
+
+        function arrange() {
+        if (count > 5) {
+            document.body.innerHTML = `<div id="game-over">GAME OVER. You had ${correctCount} correct answers</div>`;
+            return;
+        }
+        let wrong1, wrong2, wrong3;
+        let correct = Math.floor(Math.random() * lesson1.length);
+        document.getElementById("Hebrew").innerHTML = lesson1[correct].heb;
+        do {
+            wrong1 = Math.floor(Math.random() * lesson1.length);
+        } while (wrong1 == correct);
+
+        do {
+            wrong2 = Math.floor(Math.random() * lesson1.length);
+        } while (wrong2 == correct || wrong2 == wrong1);
+
+        do {
+            wrong3 = Math.floor(Math.random() * lesson1.length);
+        } while (
+            wrong3 == correct ||
+            wrong3 == wrong1 ||
+            wrong3 == wrong2
+        );
+
+        let options = [correct, wrong1, wrong2, wrong3];
+
+        let randomlyOrderedOptions = [];
+        let randNum;
+        while (options.length != 0) {
+            randNum = Math.floor(Math.random() * options.length);
+            randomlyOrderedOptions.push(options[randNum]);
+            options.splice(randNum, 1);
+        }
+
+        let optionElements = document.getElementsByClassName("option");
+        for (let i = 0; i < optionElements.length; i++) {
+            optionElements[i].classList.remove("correct", "wrong", "right-answer");
+            optionElements[i].innerHTML = lesson1[randomlyOrderedOptions[i]].eng;
+        }
+        }
+
+        arrange();
+
+        let elements = document.getElementsByClassName("option");
+
+        for (let i = 0; i < elements.length; i++) {
+        elements[i].onclick = function () {
+            count++;
+            let heb = document.getElementById("Hebrew").innerHTML;
+            let eng;
+            for (let i = 0; i < lesson1.length; i++) {
+            if (lesson1[i].heb == heb) {
+                eng = lesson1[i].eng;
+            }
+            }
+            speak(eng); // Speak the correct answer
+            if (this.innerHTML == eng) {
+            this.classList.add("correct");
+            document.getElementById("result").innerHTML = "Great!";
+            correctCount++;
+            } else {
+            this.classList.add("wrong");
+            for (let j = 0; j < elements.length; j++) {
+                if (elements[j].innerHTML == eng) {
+                elements[j].classList.add("right-answer");
+                }
+            }
+            document.getElementById("result").innerHTML = "Wrong!";
+            }
+            setTimeout(() => {
+            arrange();
+            document.getElementById("result").innerHTML = "";
+            }, 2000);
+        };
+        }
+
+    </script>
+</body>
+</html>
